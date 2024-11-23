@@ -1,0 +1,50 @@
+# IDEs
+.idea/
+
+# Environment Variables
+.env
+
+# macOS Metadata
+.DS_Store
+
+# Logs
+openai_client.log
+*.log
+*.out
+*.log.gz
+/logs/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual Environments
+venv/
+.venv/
+
+# Build Artifacts
+dist/
+build/
+*.egg-info/
+
+# Temporary Files
+*.tmp
+*.temp
+*.swp
+
+# Data Files
+/data/
+*.csv
+*.db
+
+# Plots
+/plots/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+
+# Logs
+outputs/logs/*.txt
+outputs/logs/*.md
