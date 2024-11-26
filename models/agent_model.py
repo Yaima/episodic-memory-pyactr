@@ -370,79 +370,100 @@ class AgentModel:
         """
         Run test case, simulate agent behavior, and analyze results.
         """
-        start_time = time.time()
+        default_memory_stats = {
+            'total_episodes': 0,
+            'memory_utilization': 0.0,
+            'retrieval_accuracy': 0.0,
+            'avg_activation': 0.0,
+            'avg_retrieval_count': 0.0,
+            'pattern_performance': {},
+            'memory_age': 0.0,
+            'retrieval_rate': 0.0
+        }
 
-        # Setup declarative memory and goal chunks
+        # Setup initial state before timing
         self.setup_initial_chunks(test_word)
         print(f"\nTesting agreement with {test_word['word']}:")
         print("Features:", {k: v for k, v in test_word.items() if k != 'word'})
 
-        # Attempt episodic memory retrieval
-        retrieved_episodes = []
-        if self.episodic_memory:
-            # Generate context vector based on test_word features
-            context_vector = np.array([
-                hash(test_word.get('context', '')),
-                hash(test_word.get('pattern_group', '')),
-                hash(test_word.get('frequency', '')),
-            ])
-            print(f"Generated context vector: {context_vector}")
+        # Start timing after setup
+        start_time = time.time()
 
-            # Retrieve similar episodes
-            retrieved_episodes = self.episodic_memory.retrieve_episodes(
-                context_vector=context_vector, k=3, similarity_threshold=0.7
-            )
-            print(f"Retrieved {len(retrieved_episodes)} episodes.")
+        # Initialize results
+        results = {
+            'success': False,
+            'processing_time': 0.0,
+            'memory_stats': default_memory_stats,
+            'used_episodic': False
+        }
 
-            if retrieved_episodes:
-                # Filter retrieved episodes by context relevance
-                relevant_episode = next(
-                    (ep for ep in retrieved_episodes if ep.context.get('context') == test_word.get('context')),
-                    None
-                )
-
-                if relevant_episode:
-                    # Update test_word based on the most relevant episode
-                    test_word['pattern_group'] = relevant_episode.context.get('pattern_group',
-                                                                              test_word.get('pattern_group'))
-                    test_word['frequency'] = relevant_episode.context.get('frequency', test_word.get('frequency'))
-                    test_word['animacy'] = relevant_episode.context.get('animacy', test_word.get('animacy'))
-                    test_word['context'] = relevant_episode.context.get('context', test_word.get('context',
-                                                                                                 None))  # Safely get context
-                    # Log changes for debugging
-                    print(f"Updated test_word based on retrieved episode: {test_word}")
-                else:
-                    print("No relevant episode found; using default test_word features.")
-
-        # Initialize state
-        print("\nInitial state:")
-        print("Goal buffer:", self.model.goal)
-        print("Retrieval buffer:", self.model.retrieval)
-        print("Declarative memory:", self.model.decmem)
-
-        # Run simulation
         try:
+            # Handle episodic memory if enabled
+            retrieved_episodes = []
+            if self.episodic_memory:
+                context_vector = np.array([
+                    hash(test_word.get('context', '')),
+                    hash(test_word.get('pattern_group', '')),
+                    hash(test_word.get('frequency', '')),
+                ])
+                print(f"Generated context vector: {context_vector}")
+
+                # Retrieve similar episodes with timeout
+                retrieved_episodes = self.episodic_memory.retrieve_episodes(
+                    context_vector=context_vector,
+                    k=3,
+                    similarity_threshold=0.7
+                )
+                print(f"Retrieved {len(retrieved_episodes)} episodes.")
+
+                if retrieved_episodes:
+                    relevant_episode = next(
+                        (ep for ep in retrieved_episodes if ep.context.get('context') == test_word.get('context')),
+                        None
+                    )
+
+                    if relevant_episode:
+                        # Update with relevant episode data
+                        for key in ['pattern_group', 'frequency', 'animacy', 'context']:
+                            test_word[key] = relevant_episode.context.get(key, test_word.get(key))
+                        print(f"Updated test_word based on retrieved episode: {test_word}")
+                    else:
+                        print("No relevant episode found; using default test_word features.")
+
+            # Run simulation
             sim = self.model.simulation(initial_time=0.1, trace=True, gui=False)
             sim.run()
-        except Exception as e:
-            print(f"Simulation error: {e}")
-            traceback.print_exc()
 
-        # Analyze results
-        results = self.analyze_results(test_word)
-        processing_time = time.time() - start_time
-        results['processing_time'] = processing_time
+            # Analyze core results
+            results = self.analyze_results(test_word)
 
-        # Store episode if simulation was successful
-        if results['success']:
-            self.store_episode(test_word, results)
+            # Store episode for learning (regardless of success)
             if self.episodic_memory:
-                results['memory_stats'] = self.episodic_memory.get_statistics()
-            results['used_episodic'] = bool(retrieved_episodes)
-        else:
-            results['used_episodic'] = False  # No successful retrieval was used
+                self.store_episode(test_word, results)
+                try:
+                    results['memory_stats'] = self.episodic_memory.get_statistics()
+                except Exception as e:
+                    print(f"Warning: Error getting memory stats: {e}")
+                    results['memory_stats'] = default_memory_stats
 
-        return results
+            # Update final results
+            results.update({
+                'processing_time': time.time() - start_time,
+                'used_episodic': bool(retrieved_episodes)
+            })
+
+            return results
+
+        except Exception as e:
+            print(f"Error in run_agreement_test: {e}")
+            traceback.print_exc()
+            end_time = time.time() - start_time
+            return {
+                'success': False,
+                'processing_time': end_time,
+                'memory_stats': default_memory_stats,
+                'used_episodic': False
+            }
 
     def analyze_results(self, test_word: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze final model state"""

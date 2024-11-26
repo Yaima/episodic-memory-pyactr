@@ -120,6 +120,35 @@ def generate_test_cases() -> List[Dict[str, Any]]:
         {'word': 'set', 'phonology': '/sɛt/', 'meaning': '[[set]]', 'number': 'sg', 'person': '3',
          'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'high', 'pattern_group': 'homonym',
          'context': 'collection'},
+        # Financial Institution Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-financial]]', 'number': 'sg', 'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'high', 'pattern_group': 'homonym',
+         'context': 'financial'},
+        # River Bank Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-river]]', 'number': 'sg', 'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'medium', 'pattern_group': 'homonym',
+         'context': 'nature'
+         },
+        # Banking Action Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-action]]', 'number': 'sg', 'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'high', 'pattern_group': 'homonym',
+         'context': 'transaction'
+         },
+        # Aircraft Banking Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-turn]]', 'number': 'sg',  'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'low', 'pattern_group': 'homonym',
+         'context': 'aviation'
+         },
+        # Memory Bank Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-storage]]', 'number': 'sg', 'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'medium', 'pattern_group': 'homonym',
+         'context': 'technology'
+         },
+        # Blood Bank Context
+        {'word': 'bank', 'phonology': '/bæŋk/', 'meaning': '[[bank-medical]]', 'number': 'sg', 'person': '3',
+         'animacy': 'inanimate', 'category': 'extreme', 'frequency': 'medium', 'pattern_group': 'homonym',
+         'context': 'medical'
+         }
     ]
 
     return test_cases
